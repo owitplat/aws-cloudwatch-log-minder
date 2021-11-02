@@ -145,6 +145,7 @@ def delete_empty_log_streams(
 
 def get_all_log_group_names() -> List[str]:
     result: List[str] = []
+    cw_logs = boto3.client("logs", config=Config(retries=dict(max_attempts=10)))
     for response in cw_logs.get_paginator("describe_log_groups").paginate(
         PaginationConfig={"PageSize": 50}
     ):
@@ -156,7 +157,6 @@ def fan_out(
     function_arn: str, log_group_names: List[str], purge_non_empty: bool, dry_run: bool
 ):
     awslambda = boto3.client("lambda")
-    cw_logs = boto3.client("logs", config=Config(retries=dict(max_attempts=10)))
     log.info(
         "recursively invoking %s to delete empty log streams from %d log groups",
         function_arn,
